@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>個人開銷管理系統</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <div class="app">
+    <header class="header card">
+      <div>
+        <h1>個人開銷管理系統</h1>
+        <p class="sub">記錄每日花費，掌握本月支出狀況</p>
+      </div>
+      <div class="summary">
+        <p>本月總支出</p>
+        <p class="total">$ <span id="totalAmount">0</span></p>
+      </div>
+    </header>
+
+    <main>
+      <section class="top-grid">
+        <article class="card form-card">
+          <h2>新增支出</h2>
+          <button id="toggleForm" class="toggle-btn" type="button">收合 / 展開表單</button>
+          <form id="expenseForm">
+            <label>
+              金額
+              <input type="number" id="amount" min="1" required />
+            </label>
+            <label>
+              類別
+              <select id="category" required>
+                <option value="飲食">飲食</option>
+                <option value="交通">交通</option>
+                <option value="娛樂">娛樂</option>
+                <option value="學習">學習</option>
+                <option value="其他">其他</option>
+              </select>
+            </label>
+            <label>
+              日期
+              <input type="date" id="date" required />
+            </label>
+            <label>
+              備註
+              <input type="text" id="note" maxlength="50" placeholder="例如：早餐、捷運、電影" />
+            </label>
+            <button type="submit" class="primary-btn">新增</button>
+          </form>
+        </article>
+
+        <article class="card chart-card">
+          <h2>類別支出比例</h2>
+          <canvas id="expenseChart"></canvas>
+        </article>
+      </section>
+
+      <section class="card">
+        <h2>支出清單</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>類別</th>
+                <th>金額</th>
+                <th>日期</th>
+                <th>備註</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="expenseList"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <small>© 2026 個人開銷管理系統</small>
+    </footer>
+  </div>
+</body>
+</html>
