@@ -14,11 +14,12 @@
     <header class="header card">
       <div>
         <h1>個人開銷管理系統</h1>
-        <p class="sub">記錄每日花費，掌握本月支出狀況</p>
+        <p class="sub">記錄每日收支，掌握本月財務狀況</p>
       </div>
-      <div class="summary">
-        <p>本月總支出</p>
-        <p class="total">$ <span id="totalAmount">0</span></p>
+      <div class="summary-grid">
+        <div class="summary-item"><p>本月總支出</p><p class="total expense">$ <span id="totalExpense">0</span></p></div>
+        <div class="summary-item"><p>本月總收入</p><p class="total income">$ <span id="totalIncome">0</span></p></div>
+        <div class="summary-item"><p>當月盈餘</p><p class="total balance">$ <span id="monthlyBalance">0</span></p></div>
       </div>
     </header>
 
@@ -26,62 +27,54 @@
       <section class="top-grid">
         <article class="card form-card">
           <h2>新增支出</h2>
-          <button id="toggleForm" class="toggle-btn" type="button">收合 / 展開表單</button>
+          <button id="toggleExpenseForm" class="toggle-btn" type="button">收合 / 展開支出表單</button>
           <form id="expenseForm">
-            <label>
-              金額
-              <input type="number" id="amount" min="1" required />
-            </label>
-            <label>
-              類別
+            <label>金額<input type="number" id="amount" min="1" required /></label>
+            <label>類別
               <select id="category" required>
-                <option value="飲食">飲食</option>
-                <option value="交通">交通</option>
-                <option value="娛樂">娛樂</option>
-                <option value="學習">學習</option>
-                <option value="其他">其他</option>
+                <option value="飲食">飲食</option><option value="交通">交通</option><option value="娛樂">娛樂</option><option value="學習">學習</option><option value="其他">其他</option>
               </select>
             </label>
-            <label>
-              日期
-              <input type="date" id="date" required />
-            </label>
-            <label>
-              備註
-              <input type="text" id="note" maxlength="50" placeholder="例如：早餐、捷運、電影" />
-            </label>
-            <button type="submit" class="primary-btn">新增</button>
+            <label>日期<input type="date" id="date" required /></label>
+            <label>備註<input type="text" id="note" maxlength="50" /></label>
+            <button type="submit" class="primary-btn">新增支出</button>
           </form>
         </article>
 
-        <article class="card chart-card">
-          <h2>本月類別支出比例</h2>
-          <canvas id="expenseChart"></canvas>
+        <article class="card form-card">
+          <h2>新增收入</h2>
+          <button id="toggleIncomeForm" class="toggle-btn" type="button">收合 / 展開收入表單</button>
+          <form id="incomeForm">
+            <label>金額<input type="number" id="incomeAmount" min="1" required /></label>
+            <label>類別
+              <select id="incomeCategory" required>
+                <option value="薪資">薪資</option><option value="獎金">獎金</option><option value="投資">投資</option><option value="兼職">兼職</option><option value="其他">其他</option>
+              </select>
+            </label>
+            <label>日期<input type="date" id="incomeDate" required /></label>
+            <label>備註<input type="text" id="incomeNote" maxlength="50" /></label>
+            <button type="submit" class="primary-btn income-btn">新增收入</button>
+          </form>
         </article>
       </section>
 
+      <section class="top-grid">
+        <article class="card chart-card"><h2>支出類別比例（當月）</h2><canvas id="expenseChart"></canvas></article>
+        <article class="card chart-card"><h2>收入類別比例（當月）</h2><canvas id="incomeChart"></canvas></article>
+      </section>
+
       <section class="card">
-        <h2>支出清單</h2>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>類別</th>
-                <th>金額</th>
-                <th>日期</th>
-                <th>備註</th>
-                <th>操作</th>
-              </tr>
-            </thead>
-            <tbody id="expenseList"></tbody>
-          </table>
-        </div>
+        <h2>支出清單（yyyy/mm）</h2>
+        <div class="table-wrap"><table><thead><tr><th>類別</th><th>金額</th><th>日期</th><th>備註</th><th>操作</th></tr></thead><tbody id="expenseList"></tbody></table></div>
+      </section>
+
+      <section class="card">
+        <h2>收入清單（yyyy/mm）</h2>
+        <div class="table-wrap"><table><thead><tr><th>類別</th><th>金額</th><th>日期</th><th>備註</th><th>操作</th></tr></thead><tbody id="incomeList"></tbody></table></div>
       </section>
     </main>
 
-    <footer>
-      <small>© 2026 個人開銷管理系統</small>
-    </footer>
+    <footer><small>© 2026 個人開銷管理系統</small></footer>
   </div>
 </body>
 </html>
