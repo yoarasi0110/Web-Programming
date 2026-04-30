@@ -1,167 +1,126 @@
-const STORAGE_KEY = "expenses";
-const CATEGORY_LIST = ["飲食", "交通", "娛樂", "學習", "其他"];
+const EXPENSE_KEY = "expenses";
+const INCOME_KEY = "incomes";
+const EXPENSE_CATEGORIES = ["飲食", "交通", "娛樂", "學習", "其他"];
+const INCOME_CATEGORIES = ["薪資", "獎金", "投資", "兼職", "其他"];
 
-let expenses = (JSON.parse(localStorage.getItem(STORAGE_KEY)) || []).map((item) => ({
-  ...item,
-  id: item.id || crypto.randomUUID()
-}));
-let chart;
+let expenses = (JSON.parse(localStorage.getItem(EXPENSE_KEY)) || []).map(withId);
+let incomes = (JSON.parse(localStorage.getItem(INCOME_KEY)) || []).map(withId);
+let expenseChart;
+let incomeChart;
 
-function saveExpenses() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(expenses));
+function withId(item) { return { ...item, id: item.id || crypto.randomUUID() }; }
+function saveAll() {
+  localStorage.setItem(EXPENSE_KEY, JSON.stringify(expenses));
+  localStorage.setItem(INCOME_KEY, JSON.stringify(incomes));
 }
-
-function formatCurrency(value) {
-  return value.toLocaleString("zh-TW");
-}
-
+function formatCurrency(value) { return value.toLocaleString("zh-TW"); }
 function formatYearMonth(dateString) {
-  const date = new Date(dateString);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  return `${year}/${month}`;
+  const d = new Date(dateString);
+  return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
-
-function getCurrentMonthExpenses() {
+function isCurrentMonth(dateString) {
   const now = new Date();
-  const month = now.getMonth();
-  const year = now.getFullYear();
-  return expenses.filter((item) => {
-    const date = new Date(item.date);
-    return date.getMonth() === month && date.getFullYear() === year;
-  });
+  const d = new Date(dateString);
+  return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
 }
 
-function animateTotal(target) {
-  const element = document.getElementById("totalAmount");
-  const start = Number(element.textContent.replace(/,/g, "")) || 0;
-  const duration = 500;
+function getMonthlyData(list) { return list.filter((item) => isCurrentMonth(item.date)); }
+
+function animateNumber(id, target) {
+  const el = document.getElementById(id);
+  const start = Number(el.textContent.replace(/,/g, "")) || 0;
   const startTime = performance.now();
-
-  function update(timestamp) {
-    const progress = Math.min((timestamp - startTime) / duration, 1);
-    const value = Math.round(start + (target - start) * progress);
-    element.textContent = formatCurrency(value);
-    if (progress < 1) requestAnimationFrame(update);
+  const duration = 500;
+  function tick(ts) {
+    const p = Math.min((ts - startTime) / duration, 1);
+    el.textContent = formatCurrency(Math.round(start + (target - start) * p));
+    if (p < 1) requestAnimationFrame(tick);
   }
-
-  requestAnimationFrame(update);
+  requestAnimationFrame(tick);
 }
 
-function calculateCategoryTotals() {
-  const result = Object.fromEntries(CATEGORY_LIST.map((c) => [c, 0]));
-  getCurrentMonthExpenses().forEach((item) => {
-    result[item.category] += Number(item.amount);
-  });
+function calculateTotals(list, categories) {
+  const result = Object.fromEntries(categories.map((c) => [c, 0]));
+  getMonthlyData(list).forEach((item) => { result[item.category] += Number(item.amount); });
   return result;
 }
 
-function renderList() {
-  const tbody = document.getElementById("expenseList");
+function renderGroupedList(list, elementId, type) {
+  const tbody = document.getElementById(elementId);
   tbody.innerHTML = "";
+  if (list.length === 0) { tbody.innerHTML = `<tr><td colspan="5">尚無資料。</td></tr>`; return; }
 
-  if (expenses.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5">尚無資料，請先新增支出。</td></tr>`;
-    return;
-  }
-
-  const sortedExpenses = expenses
-    .slice()
-    .sort((a, b) => new Date(b.date) - new Date(a.date));
-
-  let currentGroup = "";
-  sortedExpenses.forEach((item) => {
-    const group = formatYearMonth(item.date);
-    if (group !== currentGroup) {
-      currentGroup = group;
-      const groupRow = document.createElement("tr");
-      groupRow.className = "group-row";
-      groupRow.innerHTML = `<td colspan="5">📅 ${group}</td>`;
-      tbody.appendChild(groupRow);
+  const sorted = list.slice().sort((a, b) => new Date(b.date) - new Date(a.date));
+  let group = "";
+  sorted.forEach((item) => {
+    const ym = formatYearMonth(item.date);
+    if (ym !== group) {
+      group = ym;
+      const tr = document.createElement("tr");
+      tr.className = "group-row";
+      tr.innerHTML = `<td colspan="5">📅 ${ym}</td>`;
+      tbody.appendChild(tr);
     }
-
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${item.category}</td>
-      <td>$ ${formatCurrency(Number(item.amount))}</td>
-      <td>${item.date}</td>
-      <td>${item.note || "-"}</td>
-      <td><button class="delete-btn" data-id="${item.id}">刪除</button></td>
-    `;
-    tbody.appendChild(row);
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${item.category}</td><td>$ ${formatCurrency(Number(item.amount))}</td><td>${item.date}</td><td>${item.note || "-"}</td><td><button class="delete-btn" data-type="${type}" data-id="${item.id}">刪除</button></td>`;
+    tbody.appendChild(tr);
   });
 }
 
-function renderChart() {
-  const totals = calculateCategoryTotals();
-  const data = CATEGORY_LIST.map((category) => totals[category]);
-  const hasData = data.some((value) => value > 0);
-
-  const labels = hasData ? CATEGORY_LIST : ["當月無資料"];
-  const dataset = hasData ? data : [1];
-  const backgroundColor = hasData
-    ? ["#60a5fa", "#34d399", "#f472b6", "#fbbf24", "#a78bfa"]
-    : ["#cbd5e1"];
-
-  if (chart) chart.destroy();
-
-  chart = new Chart(document.getElementById("expenseChart"), {
+function renderPieChart(canvasId, chartRef, categories, totals, noDataLabel) {
+  const data = categories.map((c) => totals[c]);
+  const hasData = data.some((v) => v > 0);
+  if (chartRef) chartRef.destroy();
+  return new Chart(document.getElementById(canvasId), {
     type: "pie",
     data: {
-      labels,
-      datasets: [{
-        data: dataset,
-        backgroundColor
-      }]
+      labels: hasData ? categories : [noDataLabel],
+      datasets: [{ data: hasData ? data : [1], backgroundColor: hasData ? ["#60a5fa", "#34d399", "#f472b6", "#fbbf24", "#a78bfa"] : ["#cbd5e1"] }]
     },
-    options: {
-      plugins: {
-        legend: { position: "bottom" }
-      }
-    }
+    options: { plugins: { legend: { position: "bottom" } } }
   });
 }
 
 function updateSummary() {
-  const total = getCurrentMonthExpenses().reduce((sum, item) => sum + Number(item.amount), 0);
-  animateTotal(total);
+  const expenseTotal = getMonthlyData(expenses).reduce((s, i) => s + Number(i.amount), 0);
+  const incomeTotal = getMonthlyData(incomes).reduce((s, i) => s + Number(i.amount), 0);
+  const balance = incomeTotal - expenseTotal;
+  animateNumber("totalExpense", expenseTotal);
+  animateNumber("totalIncome", incomeTotal);
+  animateNumber("monthlyBalance", balance);
 }
 
 function refreshUI() {
-  renderList();
-  renderChart();
+  renderGroupedList(expenses, "expenseList", "expense");
+  renderGroupedList(incomes, "incomeList", "income");
+  expenseChart = renderPieChart("expenseChart", expenseChart, EXPENSE_CATEGORIES, calculateTotals(expenses, EXPENSE_CATEGORIES), "當月無支出");
+  incomeChart = renderPieChart("incomeChart", incomeChart, INCOME_CATEGORIES, calculateTotals(incomes, INCOME_CATEGORIES), "當月無收入");
   updateSummary();
 }
 
 function bindEvents() {
-  document.getElementById("expenseForm").addEventListener("submit", (event) => {
-    event.preventDefault();
-
-    const amount = Number(document.getElementById("amount").value);
-    const category = document.getElementById("category").value;
-    const date = document.getElementById("date").value;
-    const note = document.getElementById("note").value.trim();
-
-    expenses.push({ id: crypto.randomUUID(), amount, category, date, note });
-    saveExpenses();
-    refreshUI();
-    event.target.reset();
+  document.getElementById("expenseForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    expenses.push(withId({ amount: Number(amount.value), category: category.value, date: date.value, note: note.value.trim() }));
+    saveAll(); refreshUI(); e.target.reset();
+  });
+  document.getElementById("incomeForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    incomes.push(withId({ amount: Number(incomeAmount.value), category: incomeCategory.value, date: incomeDate.value, note: incomeNote.value.trim() }));
+    saveAll(); refreshUI(); e.target.reset();
+  });
+  document.addEventListener("click", (e) => {
+    if (!e.target.classList.contains("delete-btn")) return;
+    const { id, type } = e.target.dataset;
+    if (type === "expense") expenses = expenses.filter((i) => i.id !== id);
+    if (type === "income") incomes = incomes.filter((i) => i.id !== id);
+    saveAll(); refreshUI();
   });
 
-  document.getElementById("expenseList").addEventListener("click", (event) => {
-    if (event.target.classList.contains("delete-btn")) {
-      const { id } = event.target.dataset;
-      expenses = expenses.filter((item) => item.id !== id);
-      saveExpenses();
-      refreshUI();
-    }
-  });
-
-  $("#toggleForm").on("click", () => {
-    $("#expenseForm").slideToggle(180);
-  });
+  $("#toggleExpenseForm").on("click", () => $("#expenseForm").slideToggle(180));
+  $("#toggleIncomeForm").on("click", () => $("#incomeForm").slideToggle(180));
 }
 
-saveExpenses();
+saveAll();
 bindEvents();
 refreshUI();
