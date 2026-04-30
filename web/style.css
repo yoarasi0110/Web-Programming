@@ -93,3 +93,20 @@ footer { text-align: center; color: var(--muted); margin: 1.2rem 0; }
   .header { flex-direction: column; align-items: flex-start; }
   .summary { text-align: left; }
 }
+
+
+.group-row td {
+  background: #f8fafc;
+  color: #334155;
+  font-weight: 700;
+}
+
+
+.summary-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: .75rem; }
+.summary-item { background:#f8fafc; border-radius:12px; padding:.65rem .8rem; }
+.expense { color:#dc2626; }
+.income { color:#16a34a; }
+.balance { color:#2563eb; }
+.income-btn { background:#16a34a; }
+.income-btn:hover { background:#15803d; }
+@media (max-width: 900px) { .summary-grid { grid-template-columns: 1fr; width:100%; } }
