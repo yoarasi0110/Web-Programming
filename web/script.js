@@ -1,7 +1,10 @@
 const STORAGE_KEY = "expenses";
 const CATEGORY_LIST = ["飲食", "交通", "娛樂", "學習", "其他"];
 
-let expenses = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+let expenses = (JSON.parse(localStorage.getItem(STORAGE_KEY)) || []).map((item) => ({
+  ...item,
+  id: item.id || crypto.randomUUID()
+}));
 let chart;
 
 function saveExpenses() {
@@ -10,6 +13,13 @@ function saveExpenses() {
 
 function formatCurrency(value) {
   return value.toLocaleString("zh-TW");
+}
+
+function formatYearMonth(dateString) {
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  return `${year}/${month}`;
 }
 
 function getCurrentMonthExpenses() {
@@ -40,7 +50,7 @@ function animateTotal(target) {
 
 function calculateCategoryTotals() {
   const result = Object.fromEntries(CATEGORY_LIST.map((c) => [c, 0]));
-  expenses.forEach((item) => {
+  getCurrentMonthExpenses().forEach((item) => {
     result[item.category] += Number(item.amount);
   });
   return result;
@@ -55,20 +65,31 @@ function renderList() {
     return;
   }
 
-  expenses
+  const sortedExpenses = expenses
     .slice()
-    .sort((a, b) => new Date(b.date) - new Date(a.date))
-    .forEach((item, index) => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${item.category}</td>
-        <td>$ ${formatCurrency(Number(item.amount))}</td>
-        <td>${item.date}</td>
-        <td>${item.note || "-"}</td>
-        <td><button class="delete-btn" data-index="${index}">刪除</button></td>
-      `;
-      tbody.appendChild(row);
-    });
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  let currentGroup = "";
+  sortedExpenses.forEach((item) => {
+    const group = formatYearMonth(item.date);
+    if (group !== currentGroup) {
+      currentGroup = group;
+      const groupRow = document.createElement("tr");
+      groupRow.className = "group-row";
+      groupRow.innerHTML = `<td colspan="5">📅 ${group}</td>`;
+      tbody.appendChild(groupRow);
+    }
+
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${item.category}</td>
+      <td>$ ${formatCurrency(Number(item.amount))}</td>
+      <td>${item.date}</td>
+      <td>${item.note || "-"}</td>
+      <td><button class="delete-btn" data-id="${item.id}">刪除</button></td>
+    `;
+    tbody.appendChild(row);
+  });
 }
 
 function renderChart() {
@@ -76,7 +97,7 @@ function renderChart() {
   const data = CATEGORY_LIST.map((category) => totals[category]);
   const hasData = data.some((value) => value > 0);
 
-  const labels = hasData ? CATEGORY_LIST : ["無資料"];
+  const labels = hasData ? CATEGORY_LIST : ["當月無資料"];
   const dataset = hasData ? data : [1];
   const backgroundColor = hasData
     ? ["#60a5fa", "#34d399", "#f472b6", "#fbbf24", "#a78bfa"]
@@ -121,7 +142,7 @@ function bindEvents() {
     const date = document.getElementById("date").value;
     const note = document.getElementById("note").value.trim();
 
-    expenses.push({ amount, category, date, note });
+    expenses.push({ id: crypto.randomUUID(), amount, category, date, note });
     saveExpenses();
     refreshUI();
     event.target.reset();
@@ -129,8 +150,8 @@ function bindEvents() {
 
   document.getElementById("expenseList").addEventListener("click", (event) => {
     if (event.target.classList.contains("delete-btn")) {
-      const index = Number(event.target.dataset.index);
-      expenses.splice(index, 1);
+      const { id } = event.target.dataset;
+      expenses = expenses.filter((item) => item.id !== id);
       saveExpenses();
       refreshUI();
     }
@@ -141,5 +162,6 @@ function bindEvents() {
   });
 }
 
+saveExpenses();
 bindEvents();
 refreshUI();
