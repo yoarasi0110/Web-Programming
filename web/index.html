@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>個人開銷管理系統</title>
   <link rel="stylesheet" href="style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4" defer></script>
   <script src="script.js" defer></script>
 </head>
 <body>
@@ -26,7 +27,7 @@
       <section class="top-grid">
         <article class="card form-card">
           <h2>新增支出</h2>
-          <button id="toggleExpenseForm" class="toggle-btn" type="button">收合 / 展開支出表單</button>
+          <button id="toggleExpenseForm" class="toggle-btn" type="button">收合 / 展開表單</button>
           <form id="expenseForm">
             <label>金額<input type="number" id="amount" min="1" required /></label>
             <label>類別
@@ -42,7 +43,7 @@
 
         <article class="card form-card">
           <h2>新增收入</h2>
-          <button id="toggleIncomeForm" class="toggle-btn" type="button">收合 / 展開收入表單</button>
+          <button id="toggleIncomeForm" class="toggle-btn" type="button">收合 / 展開表單</button>
           <form id="incomeForm">
             <label>金額<input type="number" id="incomeAmount" min="1" required /></label>
             <label>類別
@@ -63,12 +64,12 @@
       </section>
 
       <section class="card">
-        <h2>支出清單（yyyy/mm）</h2>
+        <h2>支出清單</h2>
         <div class="table-wrap"><table><thead><tr><th>類別</th><th>金額</th><th>日期</th><th>備註</th><th>操作</th></tr></thead><tbody id="expenseList"></tbody></table></div>
       </section>
 
       <section class="card">
-        <h2>收入清單（yyyy/mm）</h2>
+        <h2>收入清單</h2>
         <div class="table-wrap"><table><thead><tr><th>類別</th><th>金額</th><th>日期</th><th>備註</th><th>操作</th></tr></thead><tbody id="incomeList"></tbody></table></div>
       </section>
     </main>
