@@ -207,10 +207,14 @@ function bindEvents() {
 
   function toggle(buttonId, formId) {
     var btn = document.getElementById(buttonId);
-    var form = document.getElementById(formId);
     btn.addEventListener("click", function () {
-      var hidden = form.style.display === "none";
-      form.style.display = hidden ? "grid" : "none";
+      if (window.jQuery && typeof window.jQuery.fn.slideToggle === "function") {
+        window.jQuery("#" + formId).slideToggle(180);
+      } else {
+        var form = document.getElementById(formId);
+        if (form.classList.contains("is-collapsed")) form.classList.remove("is-collapsed");
+        else form.classList.add("is-collapsed");
+      }
     });
   }
 
@@ -218,6 +222,18 @@ function bindEvents() {
   toggle("toggleIncomeForm", "incomeForm");
 }
 
+
+function loadChartJs(callback) {
+  if (window.Chart) { callback(); return; }
+  var script = document.createElement("script");
+  script.src = "https://cdn.jsdelivr.net/npm/chart.js";
+  script.onload = callback;
+  script.onerror = callback;
+  document.head.appendChild(script);
+}
+
 saveAll();
 bindEvents();
-refreshUI();
+loadChartJs(function () {
+  refreshUI();
+});
