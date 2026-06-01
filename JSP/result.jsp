@@ -1,4 +1,7 @@
+<%--設定 JSP 頁面的編碼方式--%>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+
+<%--避免使用者輸入html特殊字元被執行--%>
 <%!
   private String escHtml(String s) {
     if (s == null) return "";
@@ -9,14 +12,19 @@
             .replace("'", "&#39;");
   }
 %>
+
+<%--取得表單資料--%>
 <%
+  <%--設定接收資料時使用 UTF-8避免中文亂碼--%>
   request.setCharacterEncoding("UTF-8");
+  <%--取得欄位內容，分別為: 支出收入、金額、類別、日期、備註--%>
   String type = request.getParameter("type");
   String amount = request.getParameter("amount");
   String category = request.getParameter("category");
   String date = request.getParameter("date");
   String note = request.getParameter("note");
 
+  <%--檢查資料是否完整--%>
   boolean ok = type != null && amount != null && category != null && date != null
       && !type.trim().isEmpty() && !amount.trim().isEmpty()
       && !category.trim().isEmpty() && !date.trim().isEmpty();
@@ -25,12 +33,17 @@
   if (ok) {
     try {
       amountValue = Double.parseDouble(amount);
+      <%--檢查金額是否為正數--%>
       if (amountValue <= 0) ok = false;
-    } catch (NumberFormatException ex) {
+    } 
+    <%--避免使用者輸入非數字內容--%>
+    catch (NumberFormatException ex) {
       ok = false;
     }
   }
 %>
+
+<%--結果畫面--%>
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -51,6 +64,8 @@
 <body>
   <div class="wrap">
     <div class="card">
+
+      <%--如果資料沒問題顯示成功訊息，然後顯示使用者輸入的資料--%>
       <% if (ok) { %>
         <h1 class="ok">✅ 資料送出成功</h1>
         <ul>
@@ -60,7 +75,9 @@
           <li>日期：<%= escHtml(date) %></li>
           <li>備註：<%= escHtml((note == null || note.trim().isEmpty()) ? "-" : note) %></li>
         </ul>
-      <% } else { %>
+      <% } 
+      <%--如果資料有問題顯示失敗訊息--%>
+      else { %>
         <h1 class="fail">⚠️ 送出失敗</h1>
         <p>資料欄位不完整或格式錯誤，請返回原頁重新送出。</p>
       <% } %>
