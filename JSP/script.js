@@ -1,8 +1,10 @@
+//設定常數
 var EXPENSE_KEY = "expenses";
 var INCOME_KEY = "incomes";
 var EXPENSE_CATEGORIES = ["飲食", "交通", "娛樂", "學習", "其他"];
 var INCOME_CATEGORIES = ["薪資", "獎金", "投資", "兼職", "其他"];
 
+//為每筆資料產生唯一編號
 function generateId() {
   if (window.crypto && typeof window.crypto.randomUUID === "function") {
     return window.crypto.randomUUID();
@@ -10,6 +12,7 @@ function generateId() {
   return "id-" + Date.now() + "-" + Math.random().toString(16).slice(2);
 }
 
+//確保每筆資料都有 id 欄位，方便後續操作
 function withId(item) {
   var result = {};
   var key;
@@ -20,45 +23,53 @@ function withId(item) {
   return result;
 }
 
+//從瀏覽器 LocalStorage 讀取支出資料和收入資料
 var expenses = (JSON.parse(localStorage.getItem(EXPENSE_KEY)) || []).map(withId);
 var incomes = (JSON.parse(localStorage.getItem(INCOME_KEY)) || []).map(withId);
 var expenseChart;
 var incomeChart;
 
+//將支出資料和收入資料存回 LocalStorage
 function saveAll() {
   localStorage.setItem(EXPENSE_KEY, JSON.stringify(expenses));
   localStorage.setItem(INCOME_KEY, JSON.stringify(incomes));
 }
 
+//加千分位，ex: 1234567 會變成 1,234,567
 function formatCurrency(value) {
   return value.toLocaleString("zh-TW");
 }
 
+//日期補零，ex: 2024/6 會變成 2024/06
 function pad2(n) {
   return n < 10 ? "0" + n : String(n);
 }
 
+//將日期字串轉換成 "YYYY/MM" 格式，ex: 2024-06 會變成 2024/06
 function formatYearMonth(dateString) {
   var d = new Date(dateString);
   return d.getFullYear() + "/" + pad2(d.getMonth() + 1);
 }
 
+//判斷日期是否為當月
 function isCurrentMonth(dateString) {
   var now = new Date();
   var d = new Date(dateString);
   return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
 }
 
+//從資料列表中篩選出當月的資料
 function getMonthlyData(list) {
   return list.filter(function (item) { return isCurrentMonth(item.date); });
 }
 
+//數字動畫效果
 function animateNumber(id, target) {
   var el = document.getElementById(id);
   var start = Number(el.textContent.replace(/,/g, "")) || 0;
   var startTime = performance.now();
   var duration = 500;
-
+  
   function tick(ts) {
     var p = Math.min((ts - startTime) / duration, 1);
     el.textContent = formatCurrency(Math.round(start + (target - start) * p));
@@ -67,6 +78,7 @@ function animateNumber(id, target) {
   requestAnimationFrame(tick);
 }
 
+//建立類別統計表
 function buildCategoryMap(categories) {
   var map = {};
   var i;
@@ -74,6 +86,7 @@ function buildCategoryMap(categories) {
   return map;
 }
 
+//計算各類別總金額
 function calculateTotals(list, categories) {
   var result = buildCategoryMap(categories);
   getMonthlyData(list).forEach(function (item) {
@@ -82,6 +95,7 @@ function calculateTotals(list, categories) {
   return result;
 }
 
+//表格產生器
 function renderGroupedList(list, elementId, type) {
   var tbody = document.getElementById(elementId);
   tbody.innerHTML = "";
@@ -118,6 +132,7 @@ function renderGroupedList(list, elementId, type) {
   });
 }
 
+//繪製圓餅圖
 function renderPieChart(canvasId, chartRef, categories, totals, noDataLabel) {
   var canvas = document.getElementById(canvasId);
   if (!window.Chart) {
@@ -149,6 +164,7 @@ function renderPieChart(canvasId, chartRef, categories, totals, noDataLabel) {
   });
 }
 
+//更新統計區域的數字和圖表
 function updateSummary() {
   var expenseTotal = getMonthlyData(expenses).reduce(function (s, i) { return s + Number(i.amount); }, 0);
   var incomeTotal = getMonthlyData(incomes).reduce(function (s, i) { return s + Number(i.amount); }, 0);
@@ -157,6 +173,7 @@ function updateSummary() {
   animateNumber("monthlyBalance", incomeTotal - expenseTotal);
 }
 
+//重新整理整個畫面，包括表格、圖表和統計數字
 function refreshUI() {
   renderGroupedList(expenses, "expenseList", "expense");
   renderGroupedList(incomes, "incomeList", "income");
@@ -165,6 +182,7 @@ function refreshUI() {
   updateSummary();
 }
 
+//綁定表單提交事件和刪除按鈕事件
 function bindEvents() {
   var expenseForm = document.getElementById("expenseForm");
   var incomeForm = document.getElementById("incomeForm");
@@ -201,6 +219,7 @@ function bindEvents() {
     refreshUI();
   });
 
+  //收合與展開表單
   function toggle(buttonId, formId) {
     var btn = document.getElementById(buttonId);
     btn.addEventListener("click", function () {
@@ -218,7 +237,7 @@ function bindEvents() {
   toggle("toggleIncomeForm", "incomeForm");
 }
 
-
+//載入 Chart.js
 function loadChartJs(callback) {
   if (window.Chart) { callback(); return; }
   var script = document.createElement("script");
