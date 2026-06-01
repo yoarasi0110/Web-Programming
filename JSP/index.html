@@ -1,9 +1,16 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
+<!--
+設定網頁基本資訊:
+UTF-8：支援中文顯示
+viewport：讓手機與平板也能正常顯示
+title：瀏覽器分頁標題
+-->
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>個人開銷管理系統</title>
+  <!--載入css、jquery、chart.js、script.js-->
   <link rel="stylesheet" href="style.css" />
   <script src="https://code.jquery.com/jquery-3.7.1.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4" defer></script>
@@ -11,6 +18,7 @@
 </head>
 <body>
   <div class="app">
+    <!--顯示系統標題與本月財務摘要-->
     <header class="header card">
       <div>
         <h1>個人開銷管理系統</h1>
@@ -25,6 +33,7 @@
 
     <main>
       <section class="top-grid">
+        <!--新增支出表單-->
         <article class="card form-card">
           <h2>新增支出</h2>
           <button id="toggleExpenseForm" class="toggle-btn" type="button">收合 / 展開表單</button>
@@ -41,7 +50,7 @@
             <button type="submit" class="primary-btn">新增支出</button>
           </form>
         </article>
-
+        <!--新增收入表單-->
         <article class="card form-card">
           <h2>新增收入</h2>
           <button id="toggleIncomeForm" class="toggle-btn" type="button">收合 / 展開表單</button>
@@ -59,12 +68,12 @@
           </form>
         </article>
       </section>
-
+      <!--支出收入統計圖表-->
       <section class="top-grid">
         <article class="card chart-card"><h2>支出類別比例（當月）</h2><canvas id="expenseChart"></canvas></article>
         <article class="card chart-card"><h2>收入類別比例（當月）</h2><canvas id="incomeChart"></canvas></article>
       </section>
-
+      <!--支出收入清單-->
       <section class="card">
         <h2>支出清單</h2>
         <div class="table-wrap"><table><thead><tr><th>類別</th><th>金額</th><th>日期</th><th>備註</th><th>操作</th></tr></thead><tbody id="expenseList"></tbody></table></div>
